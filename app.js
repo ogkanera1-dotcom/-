@@ -1,5 +1,6 @@
 import { runMeeting } from "./ai-chat.js";
 
+const STORAGE_KEY = "ruito-ai-auto-talk:meeting-log:v1";
 const form = document.querySelector("#meeting-form");
 const topicInput = document.querySelector("#topic");
 const startButton = document.querySelector("#start-button");
@@ -9,11 +10,30 @@ const status = document.querySelector("#status");
 const chatLog = document.querySelector("#chat-log");
 const emptyState = document.querySelector("#empty-state");
 
-let meetingController = null;
+// Create the export control in JavaScript, so no HTML edit is required.
+const exportButton = document.createElement("button");
+exportButton.id = "export-button";
+exportButton.className = "button quiet";
+exportButton.type = "button";
+exportButton.textContent = "TXTで保存";
+clearButton.insertAdjacentElement("afterend", exportButton);
 
-function addMessage({ name, role, text, kind = "agent" }) {
+let meetingController = null;
+let messages = [];
+
+function saveMessages() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  } catch (error) {
+    // Storage can be disabled or full; the in-memory meeting should still work.
+    console.warn("会議ログをブラウザーに保存できませんでした。", error);
+  }
+}
+
+function renderMessage(message, { scroll = false } = {}) {
+  const { name, role, text, kind = "agent" } = message;
   const item = document.createElement("li");
-  item.className = `message ${kind === "user" ? "user" : name.toLowerCase()}`;
+  item.className = `message ${kind === "user" ? "user" : String(name).toLowerCase()}`;
   const header = document.createElement("header");
   const speaker = document.createElement("strong");
   speaker.textContent = name;
@@ -25,7 +45,31 @@ function addMessage({ name, role, text, kind = "agent" }) {
   item.append(header, body);
   chatLog.append(item);
   emptyState.hidden = true;
-  item.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  if (scroll) item.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function addMessage(message) {
+  messages.push(message);
+  renderMessage(message, { scroll: true });
+  saveMessages();
+}
+
+function restoreMessages() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+    const parsed = JSON.parse(saved);
+    if (!Array.isArray(parsed)) throw new TypeError("Saved meeting log is not an array");
+    messages = parsed.filter((message) =>
+      message && typeof message.name === "string" &&
+      typeof message.role === "string" && typeof message.text === "string"
+    );
+    for (const message of messages) renderMessage(message);
+  } catch (error) {
+    messages = [];
+    console.warn("保存済みの会議ログを復元できませんでした。", error);
+    status.textContent = "保存済みログを読み込めませんでした。新しい会議を始められます。";
+  }
 }
 
 function setRunning(running) {
@@ -33,6 +77,35 @@ function setRunning(running) {
   stopButton.disabled = !running;
   topicInput.disabled = running;
 }
+
+function exportAsText() {
+  if (messages.length === 0) {
+    status.textContent = "保存する会議ログがありません";
+    return;
+  }
+
+  const lines = [
+    "ルイトAI AUTO TALK — 会議ログ",
+    `出力日時: ${new Date().toLocaleString("ja-JP")}`,
+    "",
+  ];
+  for (const message of messages) {
+    lines.push(`【${message.name}／${message.role}】`, message.text, "");
+  }
+
+  const blob = new Blob(["\uFEFF", lines.join("\n")], { type: "text/plain;charset=utf-8" });
+  const downloadUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = downloadUrl;
+  link.download = `ruito-ai-meeting-${new Date().toISOString().slice(0, 10)}.txt`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(downloadUrl);
+  status.textContent = "会議ログをTXTで保存しました";
+}
+
+restoreMessages();
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -46,7 +119,7 @@ form.addEventListener("submit", async (event) => {
   status.textContent = "会議中 — ChatGPT → Gemini → Copilot";
 
   try {
-    await runMeeting(topic, (message) => addMessage(message), signal);
+    await runMeeting(topic, addMessage, signal);
     status.textContent = "会議終了 — デモ会話が完了しました";
   } catch (error) {
     if (error.name === "AbortError") {
@@ -62,10 +135,17 @@ form.addEventListener("submit", async (event) => {
 });
 
 stopButton.addEventListener("click", () => meetingController?.abort());
+exportButton.addEventListener("click", exportAsText);
 
 clearButton.addEventListener("click", () => {
   meetingController?.abort();
+  messages = [];
   chatLog.replaceChildren();
   emptyState.hidden = false;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (error) {
+    console.warn("保存済みの会議ログを消去できませんでした。", error);
+  }
   status.textContent = "待機中 — テーマを入力してね";
 });
