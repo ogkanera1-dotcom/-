@@ -10,7 +10,6 @@ const status = document.querySelector("#status");
 const chatLog = document.querySelector("#chat-log");
 const emptyState = document.querySelector("#empty-state");
 
-// Create the export control in JavaScript, so no HTML edit is required.
 const exportButton = document.createElement("button");
 exportButton.id = "export-button";
 exportButton.className = "button quiet";
@@ -60,11 +59,13 @@ function restoreMessages() {
     if (!saved) return;
     const parsed = JSON.parse(saved);
     if (!Array.isArray(parsed)) throw new TypeError("Saved meeting log is not an array");
+    // Exclude any Gemini demo messages left by an earlier version of the demo.
     messages = parsed.filter((message) =>
-      message && typeof message.name === "string" &&
+      message && typeof message.name === "string" && message.name !== "Gemini" &&
       typeof message.role === "string" && typeof message.text === "string"
     );
     for (const message of messages) renderMessage(message);
+    saveMessages();
   } catch (error) {
     messages = [];
     console.warn("保存済みの会議ログを復元できませんでした。", error);
@@ -83,16 +84,10 @@ function exportAsText() {
     status.textContent = "保存する会議ログがありません";
     return;
   }
-
-  const lines = [
-    "ルイトAI AUTO TALK — 会議ログ",
-    `出力日時: ${new Date().toLocaleString("ja-JP")}`,
-    "",
-  ];
+  const lines = ["ルイトAI AUTO TALK — 会議ログ", `出力日時: ${new Date().toLocaleString("ja-JP")}`, ""];
   for (const message of messages) {
     lines.push(`【${message.name}／${message.role}】`, message.text, "");
   }
-
   const blob = new Blob(["\uFEFF", lines.join("\n")], { type: "text/plain;charset=utf-8" });
   const downloadUrl = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -101,7 +96,7 @@ function exportAsText() {
   document.body.append(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(downloadUrl);
+  setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
   status.textContent = "会議ログをTXTで保存しました";
 }
 
@@ -116,7 +111,7 @@ form.addEventListener("submit", async (event) => {
   const { signal } = meetingController;
   setRunning(true);
   addMessage({ name: "プロデューサー", role: "テーマ", text: topic, kind: "user" });
-  status.textContent = "会議中 — ChatGPT → Gemini → Copilot";
+  status.textContent = "会議中 — ChatGPT → Copilot（Geminiは一時退出中）";
 
   try {
     await runMeeting(topic, addMessage, signal);

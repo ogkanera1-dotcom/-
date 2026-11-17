@@ -1,8 +1,8 @@
 import { getDemoReply } from "./ai-client.js";
 
+// Gemini is intentionally reserved as an absent participant; only active agents speak.
 const participants = [
   { name: "ChatGPT", role: "設計担当" },
-  { name: "Gemini", role: "企画担当（デモ）" },
   { name: "Copilot", role: "開発担当" },
 ];
 
