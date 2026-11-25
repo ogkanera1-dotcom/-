@@ -34,3 +34,10 @@ Google Apps Script（GAS）で起動するブラウザー型の制作ワーク�
 5. ウェブアプリを開いてAIチャットを試します。
 
 APIキーはHTMLやブラウザー側JavaScriptに保存しません。API利用にはOpenAI API側の利用設定・残高/請求設定が必要になる場合があります。API料金はChatGPTのサブスクリプションとは別です。
+
+
+## Stage 3: AUTO TALK（役割シミュレーション）
+- 会議テーマを送信し、ChatGPT（設計・統括）→ Gemini（企画視点）→ Copilot（開発視点）→ 会議まとめの順で出力
+- 会議ログをブラウザー内に保存し、消去可能
+- **重要:** 現段階では1つの設定済みOpenAIモデルが3つの役割を演じます。Gemini / Copilotの実API接続ではありません。各社APIキー・接続先を設定した後に本当の複数AI通信へ拡張します。
+- 実行にはStage 2と同じ `OPENAI_API_KEY` の登録が必要です。
