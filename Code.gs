@@ -26,13 +26,14 @@ function getAppInfo() {
  * This function is intentionally not called automatically; the UI will ask
  * for an explicit save action in a later step.
  */
-function saveTextToDrive(filename, content) {
+function saveTextToDrive(token, filename, content) {
+  var account = requireAccount_(token);
   if (typeof filename !== 'string' || typeof content !== 'string') {
     throw new Error('ファイル名と内容を文字列で指定してください。');
   }
   var safeName = filename.replace(/[\\/:*?"<>|]/g, '_').slice(0, 120) || 'ruito-document.txt';
   if (content.length > 500000) throw new Error('ファイルが大きすぎます。');
-  var file = DriveApp.createFile(safeName, content, MimeType.PLAIN_TEXT);
+  var file = DriveApp.createFile('RUITO_' + account.userId + '_' + safeName, content, MimeType.PLAIN_TEXT);
   return { id: file.getId(), name: file.getName(), url: file.getUrl() };
 }
 
@@ -41,7 +42,8 @@ function saveTextToDrive(filename, content) {
  * Configure OPENAI_API_KEY in Apps Script > Project Settings > Script Properties.
  * Optional: OPENAI_MODEL (defaults to gpt-5.5).
  */
-function sendChatMessage(messages) {
+function sendChatMessage(token, messages) {
+  requireAccount_(token);
   if (!Array.isArray(messages) || messages.length < 1 || messages.length > 12) {
     throw new Error('会話履歴が正しくありません。');
   }
@@ -96,7 +98,8 @@ function sendChatMessage(messages) {
  * Copilot remains an explicitly labeled development-role simulation because
  * GitHub Copilot does not expose a general-purpose public chat API for this app.
  */
-function runAutoTalk(topic) {
+function runAutoTalk(token, topic) {
+  requireAccount_(token);
   if (typeof topic !== 'string' || !topic.trim() || topic.length > 1000) {
     throw new Error('会議テーマを1〜1000文字で入力してください。');
   }
@@ -196,22 +199,25 @@ function getAiProviderStatus() {
 }
 
 /** Save a workspace snapshot as a JSON file in the user's Google Drive. */
-function saveWorkspaceToDrive(workspace) {
+function saveWorkspaceToDrive(token, workspace) {
+  var account = requireAccount_(token);
   if (!workspace || typeof workspace !== 'object') throw new Error('保存データが正しくありません。');
   var json = JSON.stringify(workspace);
   if (json.length > 500000) throw new Error('保存データが大きすぎます。');
   var stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd_HHmmss');
-  var file = DriveApp.createFile('RUITO_STUDIO_' + stamp + '.json', json, MimeType.JSON);
+  var file = DriveApp.createFile('RUITO_STUDIO_' + account.userId + '_' + stamp + '.json', json, MimeType.JSON);
   return { id: file.getId(), name: file.getName(), url: file.getUrl() };
 }
 
 /** List recent workspace snapshots created by this app. */
-function listWorkspaceFiles() {
+function listWorkspaceFiles(token) {
+  var account = requireAccount_(token);
+  var prefix = 'RUITO_STUDIO_' + account.userId + '_';
   var it = DriveApp.getFiles();
   var files = [];
   while (it.hasNext() && files.length < 30) {
     var f = it.next();
-    if (f.getName().indexOf('RUITO_STUDIO_') === 0 && f.getName().slice(-5) === '.json') {
+    if (f.getName().indexOf(prefix) === 0 && f.getName().slice(-5) === '.json') {
       files.push({ id: f.getId(), name: f.getName(), updated: f.getLastUpdated().toISOString() });
     }
   }
@@ -220,12 +226,13 @@ function listWorkspaceFiles() {
 }
 
 /** Load only a workspace snapshot with the app's reserved filename prefix. */
-function loadWorkspaceFromDrive(fileId) {
+function loadWorkspaceFromDrive(token, fileId) {
+  var account = requireAccount_(token);
   if (typeof fileId !== 'string' || !fileId) throw new Error('ファイルIDがありません。');
   var file;
   try { file = DriveApp.getFileById(fileId); }
   catch (e) { throw new Error('ファイルを開けません。アクセス権を確認してください。'); }
-  if (file.getName().indexOf('RUITO_STUDIO_') !== 0 || file.getName().slice(-5) !== '.json') {
+  if (file.getName().indexOf('RUITO_STUDIO_' + account.userId + '_') !== 0 || file.getName().slice(-5) !== '.json') {
     throw new Error('ルイトAI STUDIOの保存ファイルではありません。');
   }
   var content = file.getBlob().getDataAsString('UTF-8');
