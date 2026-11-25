@@ -49,3 +49,18 @@ APIキーはHTMLやブラウザー側JavaScriptに保存しません。API利用
 - 初回利用時にGoogleアカウントのDriveアクセス権限の承認が必要
 - DriveアクセスはGASサーバー側で実行。保存・読み込みはユーザー操作時のみ
 - 既存ファイルの上書きではなく、毎回新しいスナップショットを作成
+
+
+## Stage 5: AUTO TALKの複数プロバイダー対応
+- ChatGPT役：OpenAI Responses APIで実接続
+- Gemini役：`GEMINI_API_KEY` がある場合にGemini APIへ実接続。未設定時は役割シミュレーション
+- Copilot役：現状は開発担当視点のシミュレーション。GitHub Copilotそのものへの接続ではありません
+- APIキーはGASのスクリプトプロパティに保存し、ブラウザーへ返しません
+
+### 追加設定
+GAS「プロジェクトの設定」→「スクリプト プロパティ」に以下を追加：
+- `GEMINI_API_KEY`：Google AI Studioで発行したGemini APIキー
+- `GEMINI_MODEL`：任意。未設定時は `gemini-2.5-flash`
+- 既存の `OPENAI_API_KEY` / `OPENAI_MODEL` も引き続き必要
+
+※Gemini APIの利用条件・モデル提供状況・料金はGoogle側の設定に依存します。Copilot役の実接続は別途公式に利用可能な連携手段の確認が必要です。
