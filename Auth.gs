@@ -3,6 +3,11 @@
  * Do not put passwords, password hashes, or session tokens in client-visible files.
  */
 function setupAuthDatabase() {
+  var activeEmail = Session.getActiveUser().getEmail();
+  var ownerEmail = Session.getEffectiveUser().getEmail();
+  if (!activeEmail || activeEmail !== ownerEmail) {
+    throw new Error('認証データベースの初期設定は、GASプロジェクト所有者がエディタから実行してください。');
+  }
   var props = PropertiesService.getScriptProperties();
   if (props.getProperty('RUITO_AUTH_DB_ID')) {
     throw new Error('認証データベースは設定済みです。');
@@ -10,8 +15,10 @@ function setupAuthDatabase() {
   var ss = SpreadsheetApp.create('RUITO AI STUDIO - private auth database');
   var users = ss.getSheets()[0];
   users.setName('Users');
+  users.clear();
   users.appendRow(['userId', 'usernameKey', 'username', 'salt', 'passwordHash', 'createdAt']);
   var data = ss.insertSheet('UserData');
+  data.clear();
   data.appendRow(['userId', 'dataKey', 'jsonValue', 'updatedAt']);
   props.setProperty('RUITO_AUTH_DB_ID', ss.getId());
   props.setProperty('RUITO_AUTH_PEPPER', Utilities.getUuid() + Utilities.getUuid());
