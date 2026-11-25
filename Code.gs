@@ -143,3 +143,44 @@ function runAutoTalk(topic) {
   if (!result) throw new Error('会議AIから文章の応答がありませんでした。');
   return { text: result, model: data.model || model, simulated: true };
 }
+
+
+/** Save a workspace snapshot as a JSON file in the user's Google Drive. */
+function saveWorkspaceToDrive(workspace) {
+  if (!workspace || typeof workspace !== 'object') throw new Error('保存データが正しくありません。');
+  var json = JSON.stringify(workspace);
+  if (json.length > 500000) throw new Error('保存データが大きすぎます。');
+  var stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd_HHmmss');
+  var file = DriveApp.createFile('RUITO_STUDIO_' + stamp + '.json', json, MimeType.JSON);
+  return { id: file.getId(), name: file.getName(), url: file.getUrl() };
+}
+
+/** List recent workspace snapshots created by this app. */
+function listWorkspaceFiles() {
+  var it = DriveApp.getFiles();
+  var files = [];
+  while (it.hasNext() && files.length < 30) {
+    var f = it.next();
+    if (f.getName().indexOf('RUITO_STUDIO_') === 0 && f.getName().slice(-5) === '.json') {
+      files.push({ id: f.getId(), name: f.getName(), updated: f.getLastUpdated().toISOString() });
+    }
+  }
+  files.sort(function(a, b) { return b.updated.localeCompare(a.updated); });
+  return files;
+}
+
+/** Load only a workspace snapshot with the app's reserved filename prefix. */
+function loadWorkspaceFromDrive(fileId) {
+  if (typeof fileId !== 'string' || !fileId) throw new Error('ファイルIDがありません。');
+  var file;
+  try { file = DriveApp.getFileById(fileId); }
+  catch (e) { throw new Error('ファイルを開けません。アクセス権を確認してください。'); }
+  if (file.getName().indexOf('RUITO_STUDIO_') !== 0 || file.getName().slice(-5) !== '.json') {
+    throw new Error('ルイトAI STUDIOの保存ファイルではありません。');
+  }
+  var content = file.getBlob().getDataAsString('UTF-8');
+  if (content.length > 500000) throw new Error('ファイルが大きすぎます。');
+  var data;
+  try { data = JSON.parse(content); } catch (e) { throw new Error('保存ファイルのJSONが壊れています。'); }
+  return data;
+}
