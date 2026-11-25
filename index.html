@@ -1,50 +1,17 @@
 <!doctype html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101827">
-  <meta name="description" content="ルイトAI AUTO TALK — AI会議のデモ">
-  <title>ルイトAI AUTO TALK</title>
-  <link rel="stylesheet" href="style.css">
-  <script type="module" src="app.js"></script>
-</head>
-<body>
-  <main class="app-shell">
-    <header class="hero">
-      <p class="eyebrow">APIなしで動くデモ</p>
-      <h1>🤖 ルイトAI <span>AUTO TALK</span></h1>
-      <p class="intro">テーマを決めて、AI会議を始めよう。ChatGPTとCopilotが参加し、Geminiの席は空けてあります 🌟</p>
-    </header>
-
-    <section class="panel controls" aria-labelledby="controls-title">
-      <h2 id="controls-title">会議のテーマ</h2>
-      <form id="meeting-form">
-        <label class="visually-hidden" for="topic">会議のテーマを入力</label>
-        <input id="topic" name="topic" type="text" maxlength="160" placeholder="例：学校で使える楽しいアプリを考えよう" required>
-        <div class="button-row">
-          <button id="start-button" class="button primary" type="submit">会議スタート</button>
-          <button id="stop-button" class="button secondary" type="button" disabled>停止</button>
-          <button id="clear-button" class="button quiet" type="button">ログを消去</button>
-        </div>
-      </form>
-      <p id="status" class="status" role="status" aria-live="polite">待機中 — テーマを入力してね</p>
-    </section>
-
-    <section class="panel meeting" aria-labelledby="meeting-title">
-      <div class="section-heading">
-        <h2 id="meeting-title">会議ログ</h2>
-        <span class="demo-badge">DEMO</span>
-      </div>
-      <div class="participants" aria-label="参加者">
-        <span>🧠 ChatGPT <small>設計・参加中</small></span>
-        <span>🌟 Gemini <small>一時退出中・席確保</small></span>
-        <span>💻 Copilot <small>開発・参加中</small></span>
-      </div>
-      <ol id="chat-log" class="chat-log" aria-live="polite" aria-relevant="additions"></ol>
-      <p id="empty-state" class="empty-state">会議ログはまだありません。開始するとChatGPTとCopilotのデモ発言が順番に表示されます。</p>
-    </section>
-    <footer>このデモの発言は固定スクリプトです。本物のAI APIには接続していません。</footer>
-  </main>
-</body>
-</html>
+<html lang="ja"><head><base target="_top"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101827"><title>ルイトAI STUDIO</title><?!= include('style'); ?></head>
+<body><div class="app">
+<aside class="sidebar" id="sidebar"><div class="brand"><b class="brand-mark">R</b><div><strong>ルイトAI</strong><small>STUDIO</small></div></div><button class="new-project" id="new-project">＋ 新しい制作</button><p class="nav-label">ワークスペース</p><nav class="nav">
+<button class="nav-item active" data-view="home">⌂ <span>ホーム</span></button><button class="nav-item" data-view="chat">✦ <span>AIチャット</span></button><button class="nav-item" data-view="talk">◎ <span>AUTO TALK</span></button><button class="nav-item" data-view="text">▤ <span>文章エディター</span></button><button class="nav-item" data-view="code">⌘ <span>コードエディター</span></button><button class="nav-item" data-view="image">▧ <span>画像スタジオ</span></button><button class="nav-item" data-view="video">▶ <span>動画スタジオ</span></button><button class="nav-item" data-view="audio">♫ <span>音声スタジオ</span></button><button class="nav-item" data-view="files">▱ <span>ファイル管理</span></button></nav><div class="sidebar-bottom"><i></i><span id="connection-label">GAS接続確認中</span></div></aside>
+<main class="main"><header class="topbar"><button class="mobile-menu" id="mobile-menu">☰</button><div><small>CREATIVE WORKSPACE</small><strong id="page-title">ホーム</strong></div><span class="save-state" id="save-state">ローカル保存対応</span></header><div class="content">
+<section class="view active" id="view-home"><div class="welcome"><div><p class="eyebrow">WELCOME TO YOUR STUDIO</p><h1>アイデアを、<span>カタチに。</span></h1><p>チャットから編集・制作まで。ここをルイトAIの制作拠点にしよう。</p></div><div class="welcome-orb">✦</div></div><h2>制作ツール</h2><div class="tool-grid">
+<button class="tool-card" data-view="chat"><b>✦</b><strong>AIチャット</strong><small>AIとの相談・アイデア整理</small></button><button class="tool-card" data-view="talk"><b>◎</b><strong>AUTO TALK</strong><small>複数AI会議のワークスペース</small></button><button class="tool-card" data-view="text"><b>▤</b><strong>文章エディター</strong><small>文章を作成・編集・保存</small></button><button class="tool-card" data-view="code"><b>⌘</b><strong>コードエディター</strong><small>HTML・CSS・JSなどを編集</small></button><button class="tool-card" data-view="image"><b>▧</b><strong>画像スタジオ</strong><small>画像の読み込み・確認</small></button><button class="tool-card" data-view="video"><b>▶</b><strong>動画スタジオ</strong><small>動画素材の読み込み</small></button><button class="tool-card" data-view="audio"><b>♫</b><strong>音声スタジオ</strong><small>音声素材の読み込み</small></button><button class="tool-card" data-view="files"><b>▱</b><strong>ファイル管理</strong><small>制作データの書き出し</small></button></div><div class="notice"><strong>開発状況</strong><p>Stage 1：GAS起動用画面、ツール切り替え、文章・コード編集、ブラウザー内保存を実装。AI接続や本格的な動画編集は次段階で追加します。</p></div></section>
+<section class="view" id="view-chat"><div class="view-heading"><p class="eyebrow">AI ASSISTANT</p><h1>AIチャット</h1><p>AI接続部分は次の開発段階で接続します。</p></div><div class="placeholder"><h2>✦ チャット接続準備中</h2><p>APIキーはブラウザーに置かず、GASサーバー側で安全に管理する設計です。</p></div></section>
+<section class="view" id="view-talk"><div class="view-heading"><p class="eyebrow">MULTI AI SESSION</p><h1>AUTO TALK</h1><p>AI同士の会議を行う専用スペース。</p></div><label>会議テーマ<input class="field" id="talk-topic" placeholder="例：ルイトAIの次の機能を考える"></label><div class="participants"><span>🧠 ChatGPT <small>設計担当</small></span><span>🌟 Gemini <small>席を確保</small></span><span>💻 Copilot <small>開発担当</small></span></div><div class="placeholder"><h2>会議エンジン準備中</h2><p>実際のAI間通信は各AIサービスの接続設定後に有効になります。</p></div></section>
+<section class="view" id="view-text"><div class="view-heading"><p class="eyebrow">DOCUMENT WORKSPACE</p><h1>文章エディター</h1><p>入力内容はこのブラウザーに自動保存されます。</p></div><input class="field" id="text-title" placeholder="ドキュメント名"><textarea class="editor" id="text-editor" placeholder="ここに文章を書く..."></textarea><div class="actions"><button class="button primary" id="export-text">TXTを書き出す</button><button class="button" id="clear-text">内容を消去</button></div></section>
+<section class="view" id="view-code"><div class="view-heading"><p class="eyebrow">CODE WORKSPACE</p><h1>コードエディター</h1><p>HTML・CSS・JavaScriptなどを編集できます。</p></div><div class="actions"><input class="field" id="code-filename" value="main.html"><select class="field" id="code-language"><option>html</option><option>css</option><option>javascript</option><option>text</option></select></div><textarea class="editor code-editor" id="code-editor" spellcheck="false" placeholder="ここにコードを書く..."></textarea><div class="actions"><button class="button primary" id="export-code">コードを書き出す</button><button class="button" id="clear-code">内容を消去</button></div></section>
+<section class="view" id="view-image"><div class="view-heading"><p class="eyebrow">IMAGE WORKSPACE</p><h1>画像スタジオ</h1><p>画像を読み込んでプレビューできます。</p></div><label class="upload">画像を選択<input type="file" id="image-input" accept="image/*" hidden></label><div class="preview" id="image-preview">画像はまだ選択されていません</div></section>
+<section class="view" id="view-video"><div class="view-heading"><p class="eyebrow">VIDEO WORKSPACE</p><h1>動画スタジオ</h1><p>動画素材の読み込みと再生プレビュー。</p></div><label class="upload">動画を選択<input type="file" id="video-input" accept="video/*" hidden></label><video class="preview" id="video-preview" controls playsinline></video><div class="notice"><strong>対応予定</strong><p>カット・分割・字幕・音量調整・書き出し。重い動画処理はiPadのメモリやブラウザー対応を確認しながら段階的に実装します。</p></div></section>
+<section class="view" id="view-audio"><div class="view-heading"><p class="eyebrow">AUDIO WORKSPACE</p><h1>音声スタジオ</h1><p>音声素材を読み込んで再生できます。</p></div><label class="upload">音声を選択<input type="file" id="audio-input" accept="audio/*" hidden></label><audio class="preview" id="audio-preview" controls></audio></section>
+<section class="view" id="view-files"><div class="view-heading"><p class="eyebrow">PROJECT FILES</p><h1>ファイル管理</h1><p>文章・コードをファイルとして書き出せます。</p></div><div class="actions"><button class="button primary" id="export-workspace">作業データをJSON保存</button><label class="button">JSONを読み込む<input type="file" id="import-workspace" accept="application/json,.json" hidden></label></div><div class="notice"><strong>保存について</strong><p>現在の自動保存先はブラウザー内です。Google Drive保存は次段階で権限と保存先を確認して追加します。</p></div></section>
+</div></main></div><?!= include('script'); ?></body></html>
