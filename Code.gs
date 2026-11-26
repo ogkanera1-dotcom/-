@@ -1,20 +1,49 @@
-/** ルイトAI STUDIO - Google Apps Script server entry */
+/** colasAI - Google Apps Script server entry */
 function doGet() {
   return HtmlService.createTemplateFromFile('index')
     .evaluate()
-    .setTitle('ルイトAI STUDIO')
+    .setTitle('colasAI')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
 }
 
-/** HTML partial loader used by index.html */
+/**
+ * Load public HTML partials from the GitHub repository.
+ * The allowlist prevents arbitrary URL/path fetching.
+ * GitHub repository must be public for this URL-based version.
+ */
 function include(filename) {
-  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+  var files = {
+    style: 'https://raw.githubusercontent.com/ogkanera1-dotcom/-/feature/username-password-auth/style.html',
+    script: 'https://raw.githubusercontent.com/ogkanera1-dotcom/-/feature/username-password-auth/script.html'
+  };
+  var url = files[filename];
+  if (!url) throw new Error('読み込み対象外のファイルです: ' + filename);
+
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'github_partial_' + filename;
+  var cached = cache.get(cacheKey);
+  if (cached !== null) return cached;
+
+  var response = UrlFetchApp.fetch(url, {
+    muteHttpExceptions: true,
+    followRedirects: true
+  });
+  var status = response.getResponseCode();
+  if (status < 200 || status >= 300) {
+    throw new Error('GitHubから ' + filename + '.html を取得できませんでした (HTTP ' + status + ')');
+  }
+  var content = response.getContentText('UTF-8');
+  if (!content || content.length > 500000) {
+    throw new Error('GitHubの ' + filename + '.html が空、または大きすぎます。');
+  }
+  cache.put(cacheKey, content, 60);
+  return content;
 }
 
 /** Lightweight connection check for the client. */
 function getAppInfo() {
   return {
-    app: 'ルイトAI STUDIO',
+    app: 'colasAI',
     status: 'ok',
     version: '0.1.0',
     serverTime: new Date().toISOString()
@@ -60,7 +89,7 @@ function sendChatMessage(token, messages) {
   });
   var payload = {
     model: model,
-    instructions: 'あなたは「ルイトAI」。日本語を基本に、正確で実用的に回答してください。不明なことは不明と伝えてください。',
+    instructions: 'あなたは「colasAI」。日本語を基本に、正確で実用的に回答してください。不明なことは不明と伝えてください。',
     input: safeMessages,
     max_output_tokens: 900
   };
@@ -111,7 +140,7 @@ function runAutoTalk(token, topic) {
   var geminiModel = props.getProperty('GEMINI_MODEL') || 'gemini-2.5-flash';
   var brief = '会議テーマ：' + topic.trim() + '\n日本語で具体的に回答。実装済みと未実装を混同せず、要点を簡潔に。';
   var chatgpt = callOpenAIText_(openAiKey, openAiModel,
-    'あなたはルイトAI STUDIOの設計・統括担当。目的、要件、優先順位、全体設計を整理してください。', brief, 550);
+    'あなたはcolasAIの設計・統括担当。目的、要件、優先順位、全体設計を整理してください。', brief, 550);
   var gemini, geminiLive = false;
   if (geminiKey) {
     gemini = callGeminiText_(geminiKey, geminiModel,
@@ -233,7 +262,7 @@ function loadWorkspaceFromDrive(token, fileId) {
   try { file = DriveApp.getFileById(fileId); }
   catch (e) { throw new Error('ファイルを開けません。アクセス権を確認してください。'); }
   if (file.getName().indexOf('RUITO_STUDIO_' + account.userId + '_') !== 0 || file.getName().slice(-5) !== '.json') {
-    throw new Error('ルイトAI STUDIOの保存ファイルではありません。');
+    throw new Error('colasAIの保存ファイルではありません。');
   }
   var content = file.getBlob().getDataAsString('UTF-8');
   if (content.length > 500000) throw new Error('ファイルが大きすぎます。');
